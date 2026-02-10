@@ -236,9 +236,14 @@ private:
                 updateCpsr(getRegister(rd));
                 break;
                 
-            case 0xE:  // B (分支)
-                pc += (static_cast<int32_t>(operand2 << 8) >> 8) * 4;  // 符号扩展并转换为字节偏移
+            case 0xE: { // B (分支) - 使用花括号创建新的作用域
+                // 修复：正确提取24位有符号偏移并转换为字节偏移
+                // ARM B指令格式：cond(4) 101 10 offset(24)
+                // 需要从整个指令中提取24位偏移，然后符号扩展
+                int32_t offset = static_cast<int32_t>(instruction << 8) >> 8;  // 符号扩展24位
+                pc += offset << 2;  // 左移2位转换为字节偏移（因为ARM指令4字节对齐）
                 break;
+            }
                 
             default:
                 // 未知指令，简单忽略
